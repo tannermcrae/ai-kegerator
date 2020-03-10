@@ -17,8 +17,25 @@ For this project I used the following
 ## Kegerator
 I purchased a kegerator, a co2 tank, and two Cornelious (corny) kegs from a seller off Craigslist. These corny kegs are refillable which allowed me to fill them up with water first so that I could test out the solenoid & "plumbing" without wasting a bunch of beer. These pony kegs use ball locks instead of a typical tap so beware that you'll have to use a different coupler if you want to use the kegs that are typically purchased from wine & beer shops.
 
-# Hardware Diagram 
+# Hardware Details 
 Below is a diagram showing how everything fits together. 
+
 ![alt HardwareDiagram](./images/png/kegerator_components.png)
+
+## Hardware Components
+**DISCLAIMER: I did a little bit of splicing power wires & electrical work to get this up and running. I'm just explaining what I did. I do not suggest anyone try this at home or condone doing anything similar. Playing with electricity is dangerous and you could die.**
+
+* Co2: The Co2 tank pushes Co2 out through an air tube and into the keg. This creates enough pressure that when a beer line opens, beer is forced out of the keg and into the tubing which is connected to the tap
+* Air Manifold: This is an optional piece if you have two kegs. It splits the air coming from the tube into two separate streams so that one Co2 tank can service multiple kegs. 
+* Keg: What contains the beer. 
+* Faucet: The location where the beer comes out. 
+* Solenoid: A solenoid valve opens when it receives a 12Vs. The solenoid above defaults to closed. When we send a signal to it, it opens up allowing beer to flow through. This is how we control the flow of beer using our software stack 
+* Relay Board: The relay board allows you to control a voltage supply with a much smaller voltage. In our case, we have 5V GPIO pins on our RaspberryPi, but our solenoid requires 12Vs to open. To get this to work, I had to cut the connector off the 12V supply & hook up the ground from the 12V supply to the ground of the solenoid. Then I hooked the + wire from the power supply to the relay. Finally I hooked up the + wire from the solenoid up to the same relay on the relay board. As you can imagine, these wires on their own aren't long enough to feed down into the kegerator to reach the solenoid & tubing. This is where the 16guage wire comes into play. You're not supposed to mix different guage wiring, but it's all I had and it worked. 
+* 12V Power supply: Generic power adapter. I needed more than 5Vs so I drew it from a power outlet using this device. 
+* RaspberryPi: Lightweight & cheap computer that I could use to run AWS Greengrass off of which also allowed me to control circuits. It has things called GPIO (general purpose input/output) pins which you can hook jumper wires to & send electrical signals through code. I used the jumper wires above to send signals from the Pi's GPIO to the relay so that I could open and close the 12V circuit / open the solenoid valve. 
+* USB Camera: This is a generic USB camera that I used to get images of the beer being poured. These images were then ran through an ML model which returned whether the glass was full or not. If the glass was full, it would turn off the solenoid.
+* Echo Device: An Amazon echo dot that I used for the voice interface. 
+
+
 
 
