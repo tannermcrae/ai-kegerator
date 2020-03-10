@@ -15,5 +15,10 @@ For this project I used the following
 * [3/16" food grade plasting tubing](https://www.amazon.com/gp/product/B00E6BCXQ8/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1)
 
 ## Kegerator
-I purchased a kegerator off of craigslist to save money. I also purchased two Cornelious (corny) kegs from the seller. These are refillable on your own which allowed me to fill them up with water first so that I could test out the solenoid & "plumbing" without wasting a bunch of beer. These pony kegs use ball locks instead of a typical tap so beware that you'll have to a different coupler if you want to use different types of kegs. 
+I purchased a kegerator, a co2 tank, and two Cornelious (corny) kegs from a seller off Craigslist. These corny kegs are refillable which allowed me to fill them up with water first so that I could test out the solenoid & "plumbing" without wasting a bunch of beer. These pony kegs use ball locks instead of a typical tap so beware that you'll have to use a different coupler if you want to use the kegs that are typically purchased from wine & beer shops.
+
+# Hardware Diagram 
+Below is a diagram showing how everything fits together. 
+![alt HardwareDiagram](./images/png/kegerator_components.png)
+
 
