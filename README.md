@@ -1,6 +1,7 @@
 # Overview
 Random little project hooking a kegerator up to Alexa &amp; controlling beer flow with a solenoid and a ML model. It's a bit over the top, but it was fun to make!
 
+Here's a video of it working [here](https://youtu.be/EAkLRoWqbNE)
 # Hardware
 For this project I used the following
 * [RaspberryPi 3B+](https://www.amazon.com/gp/product/B07BCC8PK7/ref=ppx_yo_dt_b_asin_title_o07_s00?ie=UTF8&psc=1)
