@@ -50,5 +50,43 @@ Below is a diagram showing how all the software fits together
 * **SageMaker**: AWS service for training & deploying ML models. I don't have access to a giant GPU & didn't want to go through the hassle of setting up my own EC2 instance, so I just started up a Jupyter Notebook in SageMaker and kicked off a training job through it. Note: You can accomplish the same thing using an EC2 instance it's just more work. Once I trained the model, I hosted it on a SageMaker endpoint & called the endpoint with binary encoded images to get back whether the cup was full or not. Yes, this is very unnecessary & the same thing can be accomplished with a weight sensor, but I wanted to learn how this all worked and had a lot of fun in the process. 
 
 
+# General Approach
+The wiring & software high level details can be found above. This section explains the general idea behind how I built each component along with learnings I found along the way
+
+## Model Training
+
+### Choosing the right approach
+This was my first ML model so I came into this not really knowing anything. After doing some researching, I found that the two approaches that make the most sense for doing inference in images were image classification and object detection. Image classification classifies the entire image while object detection has the added benefit of being able to draw a bounding box around an object in an image and classifying that sub-object. For this project, I only needed to know whether the glass was full or not, so image classification was fine.
+
+## Data Prep
+For ML models, it's best to train with data that's as close as you can get to real life data. I originally tried this with images from google but quickly learned that was a mistake. For building ML models for fullness detection, background, lighting, cup size, cup shap, etc.. all effected the results. Because these google images were vastly different than the environment I was trying to make inferences in, the model unsurprisingly didn't work at all. 
+
+I eventually landed on an idea for how to collect a lot of data really quickly. I took videos using the USB camera I was making inferences on of me filling up these cups manually. Then I used OpenCV to splice the videos into images. You can find the script to take videos: get_video.py & the script to splice into images here: movies_to_jpg.ipynb. I manually went through the spliced images until I found a point that looked like the glass was full. Then I ran through the directory in python and prepended empty to the files that came before the cutoff point I identified as full & prepended "full" to the rest. 
+
+By using this approach, I effectively annotated all my images automatically and stored the classification in the file name. 
+
+The last thing I needed to do was to package up the images into something called RecordIO format. This is a binary data exchange format that makes training MXNet models faster. MXNet provides a library to do that for you called im2rec.py. I don't own the rights to that software so I didn't include it. It's pretty easy to find on google. 
+
+Note: You can use those RecordIO files in SageMaker as well when using the Estimator() API. 
+
+
+### Choosing the right model
+There's a nauseating amount of classification models available to the public. After benchmarking dozens resnet50, mobilenet, vgg, squeeznet, alexnet, darknet, etc... I found that for something extremely simple like what I was doing, the model really didn't matter. For that reason I chose the fastest model which for me was mobilenet. 
+
+You can find pre-built and pre-trained models in many of the ML frameworks. These are commonly referred to as model zoos. The models are pre-trained and the artifacts such as the model parameters / weights can be downloaded and piped into your own model. I used gluon and MXNet for this. i found gluon to be the easiest to understand right out of the box when I was beginning & I could find more AWS tutorials that used MXNet than any other framework. Now I tend to lean towards Pytorch, but it's ultimately a personal preference for side projects. 
+
+### Training the Model 
+I used two approaches when training my models. The first one was to train locally on a CPU while I was figuring out my training script. I've included my mobilenet_transfer_learning jupyter notebook in this repo. For larger datasets, this is not a good approach because it takes too long and CPUs are way slower than GPUs for training models. But when you only have a couple hundred images and are running a mobilenet, a macbook pro will do the trick. 
+
+In addition to training, that script was useful for benchmarking. You can import and load a bunch of different types of models from the same model zoo & run a bunch of different images against it. That's how I ultimately landed on mobilenet. 
+
+To train bigger models or with bigger datasets using the notebook listed above, I'd recommend copy pasting it into AWS SageMaker & putting a beefy P instance under the notebook. Then you just need to change the context in the script from mx.cpu() to mx.gpu(0) and you can run the same script but with a GPU. Or if you're lucky enough to own a personal machine with an nvidia chip, then you can run it locally with mx.gpu()
+
+I wanted to do all this by myself to learn, but by far the easiest approach is to use one of SageMakers built in models & train using their publically exposed APIs. Specifically the Estimator() API. The train_sagemaker notebook is how I built a model using the Estimator API which you can feel free to take a look at. 
+
+### Hosting the Model
+The train_sagemaker notebook shows how to load your model to a SageMaker endpoint. I've seen alot of examples where people just load the model into a flask application and call it locally, but I didn't want to have my computer open and hosting the endpoint every time I wanted a beer, so I put it in SageMaker. Note, you can host the app on an EC2 instance and accomplish the same thing, it's just more work and I didn't want to do any of it :) 
+
+Once the endpoint is hosted, you can binary encode images & send it to the endpoint using the Python Boto3 AWS client. A code example of how to do that can be found in the Solenoid code. 
 
 
