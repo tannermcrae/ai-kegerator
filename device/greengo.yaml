@@ -1,0 +1,75 @@
+# Greeengrass Group definition file
+Group:
+  name: AIKegerator_Solenoid
+Cores:
+  - name: SBS040_Solenoid
+    key_path: ./certs
+    config_path: ./config
+    SyncShadow: True
+
+Lambdas:
+  - name: SolenoidOpener
+    handler: control_solenoid.pour_drink
+    package: lambda/Solenoid
+    alias: dev
+    greengrassConfig:
+      MemorySize: 128000 # Kb, ask AWS why
+      Timeout: 20 # seconds
+      Pinned: False # True for long-lived functions
+      Environment:
+        AccessSysfs: True
+        ResourceAccessPolicies:
+          - ResourceId: GPIOResource
+            Permission: 'rw'
+          - ResourceId: PiCamera
+            Permission: 'rw'
+          - ResourceId: TMPFolder
+            Permission: 'rw'
+Subscriptions:
+  - Source: Lambda::SolenoidOpener
+    Subject: solenoid/response
+    Target: cloud
+  - Source: cloud
+    Subject: solenoid
+    Target: Lambda::SolenoidOpener
+
+# Resource as defined at http://boto3.readthedocs.io/en/latest/reference/services/greengrass.html#Greengrass.Client.create_resource_definition_version
+Resources:
+  - Name: GPIOResource
+    Id: GPIOResource
+    LocalDeviceResourceData:
+      SourcePath: /dev/gpiomem
+      GroupOwnerSetting:
+        AutoAddGroupOwner: True
+
+  - Name: PiCamera
+    Id: PiCamera
+    LocalDeviceResourceData:
+      SourcePath: /dev/video0
+      GroupOwnerSetting:
+        AutoAddGroupOwner: True
+
+  - Name: TMPFolder
+    Id: TMPFolder
+    LocalVolumeResourceData:
+      SourcePath: /tmp/
+      DestinationPath: /tmp/
+      GroupOwnerSetting:
+        AutoAddGroupOwner: True
+
+Loggers:
+    # For parameter definitions, see https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/greengrass.html#Greengrass.Client.create_logger_definition
+  - Component: Lambda  # 'GreengrassSystem'|'Lambda'
+    Id: Lambda_Logger_S       # Arbitrary string
+    Level: DEBUG       # 'DEBUG'|'INFO'|'WARN'|'ERROR'|'FATAL'
+    Space: 1024        # The amount of file space, in KB, to use if the local file system is used for logging purposes
+    Type: FileSystem   # 'FileSystem'|'AWSCloudWatch'
+  - Component: Lambda  # 'GreengrassSystem'|'Lambda'
+    Id: Lambda_Logger_CW_S       # Arbitrary string
+    Level: DEBUG       # 'DEBUG'|'INFO'|'WARN'|'ERROR'|'FATAL'
+    Type: AWSCloudWatch   # 'FileSystem'|'AWSCloudWatch'
+  - Component: GreengrassSystem  # 'GreengrassSystem'|'Lambda'
+    Id: GG_Logger_S       # Arbitrary string
+    Level: DEBUG       # 'DEBUG'|'INFO'|'WARN'|'ERROR'|'FATAL'
+    Space: 1024        # The amount of file space, in KB, to use if the local file system is used for logging purposes
+    Type: FileSystem   # 'FileSystem'|'AWSCloudWatch'
